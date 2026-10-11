@@ -1,0 +1,17 @@
+LICENSE
+README.md
+pyproject.toml
+src/pyagentprolog_hf/__init__.py
+src/pyagentprolog_hf/configuration_pyagentprolog.py
+src/pyagentprolog_hf/hub_utils.py
+src/pyagentprolog_hf/modeling_pyagentprolog.py
+src/pyagentprolog_hf/pipeline_pyagentprolog.py
+src/pyagentprolog_hf/py.typed
+src/pyagentprolog_hf/registration.py
+src/pyagentprolog_hf.egg-info/PKG-INFO
+src/pyagentprolog_hf.egg-info/SOURCES.txt
+src/pyagentprolog_hf.egg-info/dependency_links.txt
+src/pyagentprolog_hf.egg-info/entry_points.txt
+src/pyagentprolog_hf.egg-info/requires.txt
+src/pyagentprolog_hf.egg-info/top_level.txt
+tests/test_model.py

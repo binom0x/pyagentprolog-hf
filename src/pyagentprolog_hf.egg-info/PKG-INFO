@@ -1,0 +1,77 @@
+Metadata-Version: 2.4
+Name: pyagentprolog-hf
+Version: 0.2.0
+Summary: Hugging Face integration for PyAgentProlog: PreTrainedModel, Pipeline, Hub upload.
+Author-email: Andrey Vorfolomeev <binom0x@proton.me>
+License-Expression: MIT
+Project-URL: Homepage, https://github.com/yourusername/pyagentprolog
+Project-URL: Repository, https://github.com/yourusername/pyagentprolog.git
+Project-URL: Documentation, https://github.com/yourusername/pyagentprolog/tree/main/pyagentprolog-hf#readme
+Project-URL: Issues, https://github.com/yourusername/pyagentprolog/issues
+Keywords: prolog,logic-programming,ai,agents,huggingface,transformers,neuro-symbolic,pyagentprolog
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: Software Development :: Interpreters
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: pyagentprolog<6.0.0,>=5.9.0
+Requires-Dist: transformers<6.0,>=5.12.0
+Requires-Dist: huggingface_hub<2.0,>=1.21.0
+Requires-Dist: numpy<2.0,>=1.26.4
+Provides-Extra: semantic-st
+Requires-Dist: sentence-transformers<7.0,>=6.0.1; extra == "semantic-st"
+Provides-Extra: semantic-ollama
+Requires-Dist: langchain-ollama<2.0,>=1.0.1; extra == "semantic-ollama"
+Provides-Extra: semantic
+Requires-Dist: sentence-transformers<7.0,>=6.0.1; extra == "semantic"
+Requires-Dist: langchain-ollama<2.0,>=1.0.1; extra == "semantic"
+Provides-Extra: hub
+Requires-Dist: huggingface_hub[cli]<2.0,>=1.21.0; extra == "hub"
+Provides-Extra: numba
+Requires-Dist: numba>=0.67.0; extra == "numba"
+Provides-Extra: test
+Requires-Dist: pytest>=8.0; extra == "test"
+Requires-Dist: pytest-cov>=5.0; extra == "test"
+Provides-Extra: all
+Requires-Dist: sentence-transformers<7.0,>=6.0.1; extra == "all"
+Requires-Dist: langchain-ollama<2.0,>=1.0.1; extra == "all"
+Requires-Dist: huggingface_hub[cli]<2.0,>=1.21.0; extra == "all"
+Requires-Dist: numba>=0.67.0; extra == "all"
+Dynamic: license-file
+
+# pyagentprolog-hf
+
+Hugging Face integration for [PyAgentProlog](https://github.com/yourusername/pyagentprolog).
+
+Позволяет использовать Prolog-движок PyAgentProlog как обычную HF-модель:
+
+* `PyAgentPrologModel.from_pretrained(...)` / `save_pretrained(...)`
+* `AutoModel.from_pretrained(..., trust_remote_code=True)`
+* `pipeline("prolog", model=...)`
+* `push_to_hub(...)` для публикации моделей на HF Hub
+
+## Установка
+
+```bash
+# Ядро устанавливается автоматически как зависимость
+pip install pyagentprolog-hf
+
+# С семантической унификацией (sentence-transformers)
+pip install pyagentprolog-hf[semantic-st]
+
+# С Ollama-эмбеддингами
+pip install pyagentprolog-hf[semantic-ollama]
+
+# С CLI для HF Hub
+pip install pyagentprolog-hf[hub]
+
+# Всё сразу
+pip install pyagentprolog-hf[all]
