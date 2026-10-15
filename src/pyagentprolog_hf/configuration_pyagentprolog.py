@@ -1,12 +1,12 @@
-"""PyAgentProlog — HF-совместимая конфигурация.
+"""PyAgentProlog — HF-compatible configuration.
 
-Хранит:
-    * Prolog-программу (rules_text);
-    * настройки семантической унификации;
-    * путь/формат KB;
-    * прочие настройки исполнения.
+Stores:
+    * the Prolog program (rules_text);
+    * semantic unification settings;
+    * KB path/format;
+    * other execution settings.
 
-Никаких нейросетевых гиперпараметров — только символьные.
+No neural-network hyperparameters — only symbolic ones.
 """
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ try:
 except ImportError:
     _HF_AVAILABLE = False
 
-    class PretrainedConfig:  # минимальная заглушка
+    class PretrainedConfig:  # minimal stub
         model_type = "pyagentprolog"
 
         def __init__(self, **kwargs):
@@ -31,7 +31,7 @@ except ImportError:
             cfg_path = os.path.join(path, "config.json")
             with open(cfg_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-            # auto_map и прочие служебные ключи не идут в __init__
+            # auto_map and other service keys are not passed to __init__
             data.pop("auto_map", None)
             data.pop("architectures", None)
             return cls(**data)
@@ -49,45 +49,46 @@ except ImportError:
 
 
 class PyAgentPrologConfig(PretrainedConfig):
-    """Конфигурация PyAgentProlog для HF.
+    """PyAgentProlog configuration for HF.
 
     Args:
         program:
-            Текст Prolog-программы (правила + директивы). Может быть пустым,
-            если вся логика — в отдельной KB.
+            Text of the Prolog program (rules + directives). May be empty
+            if all the logic lives in a separate KB.
         kb_file:
-            Имя файла KB в директории модели (например, "kb.pl" или
-            "kb.bin"). Загружается при `__init__`, если `load_kb=True`.
+            Name of the KB file inside the model directory (e.g. "kb.pl"
+            or "kb.bin"). Loaded on `__init__` if `load_kb=True`.
         kb_format:
-            'auto' | 'text' | 'binary'. 'auto' → по расширению.
+            'auto' | 'text' | 'binary'. 'auto' → decided by extension.
         load_kb:
-            Загружать ли KB сразу при создании модели.
+            Whether to load the KB immediately when the model is created.
         semantic_enabled:
-            Включать ли семантическую унификацию.
+            Whether to enable semantic unification.
         semantic_model:
-            Имя модели эмбеддингов (HF ID или короткий алиас).
+            Name of the embedding model (HF ID or short alias).
         semantic_backend:
             'st' | 'ollama' | 'custom'.
         semantic_threshold, soft_cos_min, lev_max, lev_typo_max, max_cache:
-            Параметры EmbeddingUnifier (см. prolog/embedding_unify.py).
+            Parameters of EmbeddingUnifier (see prolog/embedding_unify.py).
         max_solutions:
-            Ограничение на число решений в одном запросе (0 = без лимита).
+            Limit on the number of solutions per query (0 = no limit).
         with_explanation:
-            Возвращать ли дерево доказательства по умолчанию.
+            Whether to return the proof tree by default.
         default_main:
-            Имя предиката-цели для режима "программа → результат".
-            Если None — main/0 не ищется, исполняется только явный запрос.
+            Name of the goal predicate for "program → result" mode.
+            If None — main/0 is not looked up, and only an explicit
+            query is executed.
     """
     model_type = "pyagentprolog"
 
     def __init__(
         self,
-        # --- Программа и KB ---
+        # --- Program and KB ---
         program: str = "",
         kb_file: Optional[str] = None,
         kb_format: str = "auto",
         load_kb: bool = True,
-        # --- Семантическая унификация ---
+        # --- Semantic unification ---
         semantic_enabled: bool = False,
         semantic_model: str = "intfloat/multilingual-e5-large",
         semantic_backend: str = "st",
@@ -96,7 +97,7 @@ class PyAgentPrologConfig(PretrainedConfig):
         lev_max: float = 0.35,
         lev_typo_max: float = 0.20,
         max_cache: int = 10000,
-        # --- Исполнение ---
+        # --- Execution ---
         max_solutions: int = 0,
         with_explanation: bool = False,
         default_main: Optional[str] = None,
@@ -107,13 +108,13 @@ class PyAgentPrologConfig(PretrainedConfig):
         else:
             super().__init__()
 
-        # Программа и KB
+        # Program and KB
         self.program = program or ""
         self.kb_file = kb_file
         self.kb_format = kb_format
         self.load_kb = bool(load_kb)
 
-        # Семантика
+        # Semantics
         self.semantic_enabled = bool(semantic_enabled)
         self.semantic_model = semantic_model
         self.semantic_backend = semantic_backend
@@ -123,13 +124,13 @@ class PyAgentPrologConfig(PretrainedConfig):
         self.lev_typo_max = float(lev_typo_max)
         self.max_cache = int(max_cache)
 
-        # Исполнение
+        # Execution
         self.max_solutions = int(max_solutions)
         self.with_explanation = bool(with_explanation)
         self.default_main = default_main
 
     def save_pretrained(self, save_directory, **kwargs):
-        """Сохраняет config.json с auto_map для trust_remote_code."""
+        """Saves config.json with auto_map for trust_remote_code."""
         import json
         import os
 
@@ -139,7 +140,7 @@ class PyAgentPrologConfig(PretrainedConfig):
         with open(cfg_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
-        # Ключи, которые нужны HF для trust_remote_code
+        # Keys HF needs for trust_remote_code
         data["architectures"] = ["PyAgentPrologModel"]
         data["auto_map"] = {
             "AutoConfig":

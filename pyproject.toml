@@ -31,14 +31,6 @@ classifiers = [
     "Topic :: Software Development :: Interpreters",
 ]
 
-# Обязательные зависимости.
-# Согласовано с установленным окружением:
-#   pyagentprolog==1.0.1, transformers==5.12.1,
-#   huggingface_hub==1.21.0, numpy==1.26.4
-#
-# Верхняя граница <6.0.0 у pyagentprolog защищает от несовместимых
-# изменений внутреннего API ядра (Solver._apply_directives,
-# Agent.solver.database и т.п.), которые использует HF-обёртка.
 dependencies = [
     "pyagentprolog>=1.0.1,<2.0.0",
     "transformers>=5.12.0,<6.0",
@@ -46,35 +38,33 @@ dependencies = [
     "numpy>=1.26.4,<2.0",
 ]
 
-# Опциональные зависимости (pip install pyagentprolog-hf[extra]).
 [project.optional-dependencies]
-# Семантическая унификация через sentence-transformers
 semantic-st = [
     "sentence-transformers>=6.0.1,<7.0",
 ]
-# Семантическая унификация через Ollama (локальный сервер эмбеддингов)
+
 semantic-ollama = [
     "langchain-ollama>=1.0.1,<2.0",
 ]
-# Обе ветки семантики
+
 semantic = [
     "sentence-transformers>=6.0.1,<7.0",
     "langchain-ollama>=1.0.1,<2.0",
 ]
-# Публикация моделей на HF Hub через CLI
+
 hub = [
     "huggingface_hub[cli]>=1.21.0,<2.0",
 ]
-# Ускорение арифметики в ядре (прокидывается в pyagentprolog)
+
 numba = [
     "numba>=0.67.0",
 ]
-# Тесты
+
 test = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
 ]
-# Всё сразу (без gradio/expert — это прикладной уровень)
+
 all = [
     "sentence-transformers>=6.0.1,<7.0",
     "langchain-ollama>=1.0.1,<2.0",
@@ -83,25 +73,19 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/pyagentprolog"
-Repository = "https://github.com/yourusername/pyagentprolog.git"
-Documentation = "https://github.com/yourusername/pyagentprolog/tree/main/pyagentprolog-hf#readme"
-Issues = "https://github.com/yourusername/pyagentprolog/issues"
+Homepage = "https://github.com/binom0x/pyagentprolog"
+Repository = "https://github.com/binom0x/pyagentprolog.git"
 
-# Точки входа для плагина HF
 [project.entry-points."transformers.models"]
 pyagentprolog = "pyagentprolog_hf.registration:register_with_transformers"
 
-# Где искать пакеты
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["pyagentprolog_hf*"]
 
-# Маркер типизации (PEP 561)
 [tool.setuptools.package-data]
 pyagentprolog_hf = ["py.typed"]
 
-# Настройки инструментов
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra -q"

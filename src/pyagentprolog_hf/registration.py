@@ -1,12 +1,12 @@
-"""Регистрация PyAgentProlog в AutoConfig / AutoModel / Pipeline.
+"""Register PyAgentProlog with AutoConfig / AutoModel / Pipeline.
 
-Вызывать явно:
+Call explicitly:
     from pyagentprolog_hf import register_with_transformers
     register_with_transformers()
 
-Импорт самого пакета не имеет сайд-эффектов — это важно для
-ленивой загрузки и для того, чтобы `import pyagentprolog_hf` не
-требовал установленного transformers.
+Importing the package itself has no side effects — this matters for
+lazy loading and to ensure `import pyagentprolog_hf` does not
+require transformers to be installed.
 """
 from __future__ import annotations
 
@@ -15,11 +15,11 @@ _REGISTERED = False
 
 
 def register_with_transformers(force: bool = False) -> bool:
-    """Регистрирует PyAgentProlog в AutoConfig / AutoModel / Pipeline.
+    """Register PyAgentProlog with AutoConfig / AutoModel / Pipeline.
 
     Returns:
-        True, если регистрация выполнена; False, если transformers
-        недоступен.
+        True if registration was performed; False if transformers
+        is unavailable.
     """
     global _REGISTERED
     if _REGISTERED and not force:

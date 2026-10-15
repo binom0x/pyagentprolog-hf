@@ -1,7 +1,0 @@
-pyagentprolog_hf/
-├── __init__.py
-├── configuration_pyagentprolog.py     # PyAgentPrologConfig
-├── modeling_pyagentprolog.py          # PyAgentPrologModel
-├── pipeline_pyagentprolog.py          # PyAgentPrologPipeline
-├── hub_utils.py                       # save/push helpers
-└── registration.py                    # register_with_transformers()

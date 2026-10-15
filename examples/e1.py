@@ -2,12 +2,12 @@ from pyagentprolog_hf import PyAgentPrologConfig, PyAgentPrologModel
 
 config = PyAgentPrologConfig(
     program="""
-        родитель(иван, алексей).
-        родитель(алексей, петр).
-        дедушка(Д, В) :- родитель(Д, Р), родитель(Р, В).
+        parent(ivan, alexey).
+        parent(alexey, peter).
+        grandfather(G, GS) :- parent(G, P), parent(P, GS).
     """,
 )
 model = PyAgentPrologModel(config)
 
-out = model.generate(["дедушка(иван, X)."])
-print(out.solutions)   # [[{'X': 'петр'}]]
+out = model.generate(["grandfather(ivan, X)."])
+print(out.solutions)   # [[{'X': 'peter'}]]

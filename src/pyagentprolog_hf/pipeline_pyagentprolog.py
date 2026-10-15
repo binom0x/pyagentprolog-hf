@@ -1,10 +1,10 @@
-"""HF Pipeline для PyAgentProlog.
+"""HF Pipeline for PyAgentProlog.
 
-Регистрируется под task="prolog":
+Registered under task="prolog":
 
     from transformers import pipeline
     pipe = pipeline("prolog", model=model)
-    result = pipe("родитель(иван, X).")
+    result = pipe("parent(ivan, X).")
 """
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ except ImportError:
 
 
 class PyAgentPrologPipeline(Pipeline):
-    """Пайплайн: список Prolog-запросов → список решений."""
+    """Pipeline: list of Prolog queries → list of solutions."""
 
     def _sanitize_parameters(self, **kwargs):
         preprocess_kwargs = {}
@@ -38,31 +38,31 @@ class PyAgentPrologPipeline(Pipeline):
         return preprocess_kwargs, forward_kwargs, postprocess_kwargs
 
     def preprocess(self, inputs, **kwargs):
-        """Приводит вход к списку запросов."""
+        """Normalizes the input into a list of queries."""
         if isinstance(inputs, str):
             return [inputs]
         if isinstance(inputs, (list, tuple)):
             return list(inputs)
-        # Одиночный dict {'query': ...}
+        # Single dict {'query': ...}
         if isinstance(inputs, dict) and 'query' in inputs:
             return [inputs['query']]
         return [str(inputs)]
 
     def _forward(self, model_inputs, with_explanation=None):
-        """Вызывает модель. Возвращает PyAgentPrologOutput."""
+        """Calls the model. Returns PyAgentPrologOutput."""
         if with_explanation is None:
             with_explanation = self.model.config.with_explanation
         return self.model(queries=model_inputs,
                           with_explanation=with_explanation)
 
     def postprocess(self, model_outputs, return_all: bool = False):
-        """Формирует вывод.
+        """Builds the output.
 
-        По умолчанию:
-            * один запрос → список решений;
-            * несколько запросов → список списков.
+        By default:
+            * one query → list of solutions;
+            * multiple queries → list of lists.
 
-        return_all=True → возвращает полный PyAgentPrologOutput.
+        return_all=True → returns the full PyAgentPrologOutput.
         """
         if return_all:
             return model_outputs

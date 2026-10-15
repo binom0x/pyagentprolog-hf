@@ -1,16 +1,16 @@
-"""Общие фикстуры для тестов PyAgentProlog-HF."""
+"""Shared fixtures for PyAgentProlog-HF tests."""
 import pytest
 
 
 @pytest.fixture(scope="session")
 def simple_program() -> str:
     return """
-    родитель(иван, алексей).
-    родитель(иван, мария).
-    родитель(алексей, петр).
-    родитель(алексей, анна).
+    parent(ivan, alexey).
+    parent(ivan, maria).
+    parent(alexey, peter).
+    parent(alexey, anna).
 
-    дедушка(Д, В) :- родитель(Д, Р), родитель(Р, В).
+    grandfather(G, S) :- parent(G, P), parent(P, S).
     """
 
 

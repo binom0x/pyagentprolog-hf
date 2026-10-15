@@ -1,13 +1,13 @@
-"""Утилиты для публикации PyAgentProlog-модели на HF Hub.
+"""Utilities for publishing a PyAgentProlog model to HF Hub.
 
-Главная сложность: `save_pretrained` сохраняет только config.json
-и веса. Для `trust_remote_code=True` нужно дополнительно положить
-в репозиторий файлы:
+The main difficulty: `save_pretrained` saves only config.json
+and the weights. For `trust_remote_code=True` you also need to put
+the following files into the repository:
     * configuration_pyagentprolog.py
     * modeling_pyagentprolog.py
 
-Эта утилита копирует их из установленного пакета в директорию
-модели и загружает всё на Hub.
+This utility copies them from the installed package into the model
+directory and uploads everything to the Hub.
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ import tempfile
 from typing import Optional
 
 
-# Какие файлы нужны в репо для trust_remote_code=True
+# Which files are needed in the repo for trust_remote_code=True
 _CUSTOM_CODE_FILES = (
     "configuration_pyagentprolog.py",
     "modeling_pyagentprolog.py",
@@ -25,15 +25,15 @@ _CUSTOM_CODE_FILES = (
 
 
 def _package_dir() -> str:
-    """Директория установленного пакета pyagentprolog_hf."""
+    """Directory of the installed pyagentprolog_hf package."""
     return os.path.dirname(os.path.abspath(__file__))
 
 
 def copy_custom_code(dest_dir: str) -> list:
-    """Копирует configuration_*.py и modeling_*.py в dest_dir.
+    """Copies configuration_*.py and modeling_*.py into dest_dir.
 
     Returns:
-        Список имён скопированных файлов.
+        List of names of the copied files.
     """
     os.makedirs(dest_dir, exist_ok=True)
     src_dir = _package_dir()
@@ -54,21 +54,22 @@ def save_for_hub(
     model,
     save_directory: str,
     include_custom_code: bool = True,
-    persist_runtime_kb: bool = False,      # ← новая опция
+    persist_runtime_kb: bool = False,      # ← new option
     runtime_kb_name: str = "kb_auto.pl",
 ) -> list:
-    """Сохраняет модель в формате, готовом к upload на HF Hub.
+    """Saves the model in a format ready for upload to HF Hub.
+
     Args:
         model: PyAgentPrologModel.
-        save_directory: целевая директория.
-        include_custom_code: копировать ли configuration_*.py и
-            modeling_*.py (нужно для trust_remote_code=True).
-        persist_runtime_kb: если True — перед сохранением выгружает
-            текущее содержимое model.database.rules в KB-файл и
-            прописывает его в config.kb_file.
+        save_directory: target directory.
+        include_custom_code: whether to copy configuration_*.py and
+            modeling_*.py (needed for trust_remote_code=True).
+        persist_runtime_kb: if True — before saving, dumps the current
+            contents of model.database.rules to a KB file and writes
+            its name into config.kb_file.
 
     Returns:
-        Список путей к сохранённым файлам (относительно директории).
+        List of paths to saved files (relative to the directory).
     """
     os.makedirs(save_directory, exist_ok=True)
 
@@ -96,31 +97,31 @@ def push_to_hub(
     include_custom_code: bool = True,
     token: Optional[str] = None,
 ) -> str:
-    """Публикует модель на HF Hub.
+    """Publishes the model to HF Hub.
 
     Args:
         model: PyAgentPrologModel.
         repo_id: "username/repo-name".
-        private: приватный репозиторий.
-        commit_message: сообщение коммита.
-        include_custom_code: включать ли configuration_*.py,
-            modeling_*.py для trust_remote_code=True.
-        token: HF-токен (или из env HUGGINGFACE_HUB_TOKEN).
+        private: private repository.
+        commit_message: commit message.
+        include_custom_code: whether to include configuration_*.py,
+            modeling_*.py for trust_remote_code=True.
+        token: HF token (or taken from env HUGGINGFACE_HUB_TOKEN).
 
     Returns:
-        URL репозитория.
+        Repository URL.
     """
     try:
         from huggingface_hub import HfApi, create_repo
     except ImportError as e:
         raise ImportError(
-            "Для push_to_hub требуется huggingface_hub: "
+            "push_to_hub requires huggingface_hub: "
             "pip install huggingface_hub"
         ) from e
 
     api = HfApi(token=token)
 
-    # 1) Создаём репо (idempotent)
+    # 1) Create the repo (idempotent)
     url = create_repo(
         repo_id=repo_id,
         token=token,
@@ -129,7 +130,7 @@ def push_to_hub(
         repo_type="model",
     )
 
-    # 2) Сохраняем во временную директорию
+    # 2) Save into a temporary directory
     with tempfile.TemporaryDirectory() as tmpdir:
         save_for_hub(
             model,
@@ -137,7 +138,7 @@ def push_to_hub(
             include_custom_code=include_custom_code,
         )
 
-        # 3) Загружаем
+        # 3) Upload
         api.upload_folder(
             folder_path=tmpdir,
             repo_id=repo_id,

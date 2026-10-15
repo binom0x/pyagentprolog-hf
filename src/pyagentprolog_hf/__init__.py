@@ -1,12 +1,13 @@
-"""PyAgentProlog — HF-совместимая обёртка.
+"""PyAgentProlog — HF-compatible wrapper.
 
-Позволяет использовать PyAgentProlog как обычную HF-модель:
+Lets you use PyAgentProlog as a regular HF model:
     * `from_pretrained` / `save_pretrained`;
     * `AutoModel.from_pretrained(..., trust_remote_code=True)`;
     * `pipeline("prolog", model=...)`;
-    * локально с `local_files_only=True` или с HF Hub.
+    * locally with `local_files_only=True` or via HF Hub.
 
-Пакет НЕ меняет существующий PyAgentProlog — только надстройка.
+The package does NOT change the existing PyAgentProlog — it is only
+an add-on.
 """
 from .configuration_pyagentprolog import PyAgentPrologConfig
 from .modeling_pyagentprolog import PyAgentPrologModel, PyAgentPrologOutput

@@ -1,8 +1,8 @@
-"""PyAgentProlog — HF-совместимая модель.
+"""PyAgentProlog — HF-compatible model.
 
-Оборачивает Solver/Agent из PyAgentProlog в PreTrainedModel.
-Весов нет — вся логика символьная. `forward`/`generate` принимают
-Prolog-запросы и возвращают решения.
+Wraps Solver/Agent from PyAgentProlog into a PreTrainedModel.
+There are no weights — all the logic is symbolic. `forward`/`generate`
+accept Prolog queries and return solutions.
 """
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ except ImportError:
     _HF_AVAILABLE = False
     torch = None
 
-    class nn:  # заглушка
+    class nn:  # stub
         class Module:
             def __init__(self, *a, **kw): pass
         class Parameter:
@@ -53,18 +53,18 @@ from .configuration_pyagentprolog import PyAgentPrologConfig
 
 
 # =====================================================================
-# Выход модели
+# Model output
 # =====================================================================
 @dataclass
 class PyAgentPrologOutput(ModelOutput):
-    """Результат выполнения Prolog-запроса(ов).
+    """Result of executing Prolog query(ies).
 
-    Поля:
-        solutions:  список решений. Каждое — dict {var: value} или True/False.
-        explanations: список tracer-объектов (или None).
-        queries:    список исходных запросов.
-        count:      число решений (суммарно).
-        errors:     список сообщений об ошибках (None на позиции — успех).
+    Fields:
+        solutions:  list of solutions. Each is a dict {var: value} or True/False.
+        explanations: list of tracer objects (or None).
+        queries:    list of the original queries.
+        count:      number of solutions (total).
+        errors:     list of error messages (None at a position — success).
     """
     solutions: List[Any] = field(default_factory=list)
     explanations: List[Any] = field(default_factory=list)
@@ -84,24 +84,24 @@ class PyAgentPrologOutput(ModelOutput):
 
 
 # =====================================================================
-# Основная модель
+# Main model
 # =====================================================================
 class PyAgentPrologModel(PreTrainedModel):
-    """HF-совместимая модель PyAgentProlog.
+    """HF-compatible PyAgentProlog model.
 
-    Использование:
+    Usage:
 
         from pyagentprolog_hf import (
             PyAgentPrologModel, PyAgentPrologConfig,
         )
 
         config = PyAgentPrologConfig(
-            program="родитель(иван, алексей). родитель(алексей, петр).",
+            program="parent(ivan, alexey). parent(alexey, peter).",
             semantic_enabled=False,
         )
         model = PyAgentPrologModel(config)
-        out = model.generate(["родитель(иван, X)."])
-        print(out.solutions)   # [[{'X': 'алексей'}]]
+        out = model.generate(["parent(ivan, X)."])
+        print(out.solutions)   # [[{'X': 'alexey'}]]
     """
 
     config_class = PyAgentPrologConfig
@@ -117,26 +117,26 @@ class PyAgentPrologModel(PreTrainedModel):
 
         self.config = config
 
-        # --- Ленивая инициализация ядра ---
+        # --- Lazy initialization of the core ---
         self._solver = None
         self._agent = None
         self._unifier = None
         self._initialized = False
 
-        # --- Обратная связь с HF Hub: имя директории/репо ---
+        # --- Feedback to HF Hub: directory/repo name ---
         self.name_or_path: Optional[str] = None
         self._model_dir: Optional[str] = None
 
-        # --- Dummy-параметр: HF ожидает непустой state_dict ---
-        # Реальных весов нет, но 1 float не мешает.
+        # --- Dummy parameter: HF expects a non-empty state_dict ---
+        # There are no real weights, but 1 float does not hurt.
         if _HF_AVAILABLE:
             self._dummy = nn.Parameter(torch.zeros(1))
 
     # ------------------------------------------------------------------
-    # Ядро
+    # Core
     # ------------------------------------------------------------------
     def _ensure_solver(self):
-        """Создаёт Solver/Agent, применяет директивы, загружает KB."""
+        """Creates Solver/Agent, applies directives, loads the KB."""
         if self._initialized:
             return
 
@@ -144,15 +144,15 @@ class PyAgentPrologModel(PreTrainedModel):
         from prolog.agent import Agent
 
         program = self.config.program or ""
-        # Agent сам парсит директивы через Solver
+        # Agent parses directives itself via Solver
         self._agent = Agent(program=program, context={})
         self._solver = self._agent.solver
 
-        # Семантическая унификация (опционально)
+        # Semantic unification (optional)
         if self.config.semantic_enabled:
             self._install_semantic()
 
-        # Загрузка KB из директории модели
+        # Load KB from the model directory
         if self.config.load_kb and self.config.kb_file:
             kb_path = self._resolve_kb_path(self.config.kb_file)
             if kb_path and os.path.exists(kb_path):
@@ -166,7 +166,7 @@ class PyAgentPrologModel(PreTrainedModel):
         self._initialized = True
 
     def _install_semantic(self):
-        """Устанавливает EmbeddingUnifier согласно config."""
+        """Installs EmbeddingUnifier according to config."""
         try:
             from prolog.embedding_unify import semantic_on
         except ImportError as e:
@@ -187,27 +187,27 @@ class PyAgentPrologModel(PreTrainedModel):
             print(f"[PyAgentProlog] semantic_on failed: {e}")
 
     def _resolve_kb_path(self, kb_file: str) -> Optional[str]:
-        """Разрешает путь к KB относительно директории модели или cwd."""
+        """Resolves the KB path relative to the model directory or cwd."""
         if not kb_file:
             return None
         if os.path.isabs(kb_file):
             return kb_file
-        # 1) директория, откуда загружена модель
+        # 1) directory the model was loaded from
         if self._model_dir and os.path.isdir(self._model_dir):
             cand = os.path.join(self._model_dir, kb_file)
             if os.path.exists(cand):
                 return cand
-        # 2) name_or_path как директория
+        # 2) name_or_path as a directory
         if (self.name_or_path
                 and os.path.isdir(str(self.name_or_path))):
             cand = os.path.join(str(self.name_or_path), kb_file)
             if os.path.exists(cand):
                 return cand
-        # 3) как есть (cwd)
+        # 3) as-is (cwd)
         return kb_file
 
     def _load_kb_file(self, path: str, kb_format: str = "auto"):
-        """Загрузка KB в текущую базу знаний."""
+        """Loads KB into the current knowledge base."""
         from prolog.parser import Parser
         import pickle
 
@@ -229,7 +229,7 @@ class PyAgentPrologModel(PreTrainedModel):
         elif kb_format == "binary":
             with open(path, 'rb') as f:
                 data = pickle.load(f)
-            # Поддержка двух форматов:
+            # Support two formats:
             #   list[Rule]                      (KG-builder save_binary)
             #   {'version': 1, 'rules': [...]}  (Agent.save_kb)
             if isinstance(data, dict) and 'rules' in data:
@@ -258,17 +258,17 @@ class PyAgentPrologModel(PreTrainedModel):
         with_explanation: Optional[bool] = None,
         **kwargs,
     ) -> PyAgentPrologOutput:
-        """Выполняет один или несколько Prolog-запросов.
+        """Executes one or more Prolog queries.
 
-        Приоритет источников запроса:
-            query      > queries > input_ids (строка или список строк)
+        Priority of query sources:
+            query      > queries > input_ids (string or list of strings)
 
         Returns:
             PyAgentPrologOutput
         """
         self._ensure_solver()
 
-        # --- Нормализация входа ---
+        # --- Input normalization ---
         if query is not None:
             q_list = [query]
         elif queries is not None:
@@ -282,7 +282,7 @@ class PyAgentPrologModel(PreTrainedModel):
             elif isinstance(input_ids, (list, tuple)):
                 q_list = list(input_ids)
             else:
-                # Тензорный ввод — не поддерживаем без токенизатора
+                # Tensor input — not supported without a tokenizer
                 q_list = []
         else:
             q_list = []
@@ -301,7 +301,7 @@ class PyAgentPrologModel(PreTrainedModel):
                 solutions.append(sol)
                 explanations.append(expl)
                 errors.append(None)
-                # Считаем решения
+                # Count solutions
                 if isinstance(sol, list):
                     total += len(sol)
                 elif sol is True:
@@ -326,27 +326,27 @@ class PyAgentPrologModel(PreTrainedModel):
         inputs: Optional[Union[str, List[str]]] = None,
         **kwargs,
     ) -> PyAgentPrologOutput:
-        """HF-совместимый generate.
+        """HF-compatible generate.
 
-        Если `inputs` — строка/список строк, интерпретируется как
-        Prolog-запрос(ы). Возвращает PyAgentPrologOutput.
+        If `inputs` is a string/list of strings, it is interpreted as
+        Prolog query(ies). Returns PyAgentPrologOutput.
         """
         if inputs is None:
             inputs = kwargs.pop("queries", None)
         return self.forward(queries=inputs, **kwargs)
 
     def __call__(self, *args, **kwargs):
-        """nn.Module.__call__ переопределён, чтобы вести на forward."""
+        """nn.Module.__call__ overridden to route to forward."""
         return self.forward(*args, **kwargs)
 
     # ------------------------------------------------------------------
-    # Выполнение запроса
+    # Executing a query
     # ------------------------------------------------------------------
     def _run_query(self, query_text: str, with_explanation: bool):
-        """Выполняет запрос через Agent.query или через main-предикат.
+        """Executes a query via Agent.query or via the main predicate.
 
-        Если query_text пустой и задан config.default_main, выполняет
-        `main.` (или main/N с анонимными аргументами).
+        If query_text is empty and config.default_main is set, executes
+        `main.` (or main/N with anonymous arguments).
         """
         if not query_text or not query_text.strip():
             if self.config.default_main:
@@ -359,7 +359,7 @@ class PyAgentPrologModel(PreTrainedModel):
             query_text, with_explanation=with_explanation
         )
 
-        # Ограничение на число решений
+        # Limit on the number of solutions
         if self.config.max_solutions > 0:
             result = self._truncate_solutions(
                 result, self.config.max_solutions
@@ -372,14 +372,14 @@ class PyAgentPrologModel(PreTrainedModel):
             return self._extract_solutions(result), None
 
     def _format_main_query(self) -> str:
-        """Формирует запрос к config.default_main.
+        """Builds a query to config.default_main.
 
-        Ищет правила с головой main/N в текущей БД и подставляет
-        анонимные переменные нужной арности.
+        Looks for rules with the main/N head in the current DB and
+        substitutes the required number of anonymous variables.
         """
         name = self.config.default_main
         db = self._agent.solver.database
-        # Ищем максимальную арность main/N
+        # Look for the maximum arity of main/N
         candidates = [(n, a) for (n, a) in db.rule_index.keys() if n == name]
         if not candidates:
             return f"{name}."
@@ -391,11 +391,11 @@ class PyAgentPrologModel(PreTrainedModel):
 
     @staticmethod
     def _truncate_solutions(result, limit: int):
-        """Обрезает список решений до limit.
+        """Truncates the solution list to limit.
 
-        Поддерживает оба формата результата Agent.query:
-        * dict с ключом 'solution' (list/dict/True/False);
-        * список словарей.
+        Supports both result formats of Agent.query:
+        * dict with the 'solution' key (list/dict/True/False);
+        * list of dicts.
         """
         if isinstance(result, list):
             return result[:limit]
@@ -410,12 +410,12 @@ class PyAgentPrologModel(PreTrainedModel):
 
     @staticmethod
     def _extract_solutions(parsed):
-        """Извлекает решения из результата Agent.query.
+        """Extracts solutions from the Agent.query result.
 
-        Возвращает:
-            list[dict] — если есть решения со связками;
-            list[True] — если успех без переменных;
-            []         — если нет решений.
+        Returns:
+            list[dict] — if there are solutions with bindings;
+            list[True] — if success without variables;
+            []         — if there are no solutions.
         """
         if parsed is True:
             return [True]
@@ -446,15 +446,15 @@ class PyAgentPrologModel(PreTrainedModel):
         config: Optional[PyAgentPrologConfig] = None,
         **kwargs,
     ):
-        """Загрузка без весов.
+        """Load without weights.
 
-        Веса не загружаются — модель символьная. Директория/репо может
-        содержать:
-            * config.json  (обязательно)
-            * kb.pl / kb.bin  (опционально)
-            * custom code (при trust_remote_code=True)
+        No weights are loaded — the model is symbolic. The directory/repo
+        may contain:
+            * config.json  (required)
+            * kb.pl / kb.bin  (optional)
+            * custom code (when trust_remote_code=True)
         """
-        # Убираем HF-специфичные kwargs, которые не нужны
+        # Strip HF-specific kwargs that are not needed
         kwargs.pop("ignore_mismatched_sizes", None)
         kwargs.pop("low_cpu_mem_usage", None)
         kwargs.pop("torch_dtype", None)
@@ -470,13 +470,13 @@ class PyAgentPrologModel(PreTrainedModel):
 
         model = cls(config)
 
-        # Запоминаем, откуда загружены — для resolve kb_file
+        # Remember where it was loaded from — for resolving kb_file
         if isinstance(pretrained_model_name_or_path, str):
             model.name_or_path = pretrained_model_name_or_path
             if os.path.isdir(pretrained_model_name_or_path):
                 model._model_dir = pretrained_model_name_or_path
 
-        # Пробуем инициализировать ядро сразу (KB загрузится)
+        # Try to initialize the core right away (KB will be loaded)
         try:
             model._ensure_solver()
         except Exception as e:
@@ -485,15 +485,15 @@ class PyAgentPrologModel(PreTrainedModel):
         return model
 
     def save_pretrained(self, save_directory, **kwargs):
-        """Сохраняет config.json + dummy-веса + KB (если есть)."""
+        """Saves config.json + dummy weights + KB (if any)."""
         import shutil
 
         os.makedirs(save_directory, exist_ok=True)
 
-        # 1) config.json с auto_map
+        # 1) config.json with auto_map
         self.config.save_pretrained(save_directory)
 
-        # 2) dummy-веса (1 float), чтобы HF не ругался
+        # 2) Dummy weights (1 float) so that HF does not complain
         if _HF_AVAILABLE:
             import torch as _torch
             state = {"_dummy": _torch.zeros(1)}
@@ -505,7 +505,7 @@ class PyAgentPrologModel(PreTrainedModel):
                       'wb') as f:
                 pickle.dump({"_dummy": 0.0}, f)
 
-        # 3) KB-файл: копируем из директории модели, если он там есть
+        # 3) KB file: copy from the model directory if it is there
         if self.config.kb_file:
             src = self._resolve_kb_path(self.config.kb_file)
             if src and os.path.exists(src) and os.path.isfile(src):
@@ -516,7 +516,7 @@ class PyAgentPrologModel(PreTrainedModel):
                 if os.path.abspath(src) != os.path.abspath(dst):
                     shutil.copy2(src, dst)
 
-        # 4) Заглушка generation_config.json (HF-совместимость)
+        # 4) generation_config.json stub (HF compatibility)
         import json
         gen_cfg = {
             "max_new_tokens": self.config.max_solutions or 0,
@@ -528,7 +528,7 @@ class PyAgentPrologModel(PreTrainedModel):
             json.dump(gen_cfg, f, indent=2)
 
     # ------------------------------------------------------------------
-    # Публичные утилиты
+    # Public utilities
     # ------------------------------------------------------------------
     @property
     def agent(self):
@@ -546,27 +546,27 @@ class PyAgentPrologModel(PreTrainedModel):
         return self._agent.solver.database
 
     def add_fact(self, fact_text: str):
-        """Добавляет факт(ы) в базу знаний."""
+        """Adds fact(s) to the knowledge base."""
         self._ensure_solver()
         self._agent.add_fact(fact_text)
 
     def add_facts(self, facts_text: str):
-        """Добавляет пачку фактов/правил за один вызов парсера."""
+        """Adds a batch of facts/rules in a single parser call."""
         self._ensure_solver()
         self._agent.add_facts(facts_text)
 
     def reset_kb(self):
-        """Очищает базу знаний (программу и KB), сохраняя builtins."""
+        """Clears the knowledge base (program and KB), keeping builtins."""
         self._ensure_solver()
         self._agent.clear_kb()
 
     def reload_kb(self):
-        """Перезагружает KB из config.kb_file."""
+        """Reloads the KB from config.kb_file."""
         self._ensure_solver()
         if not self.config.kb_file:
             return
         self._agent.clear_kb()
-        # Переинициализируем программу
+        # Reinitialize the program
         from prolog.parser import Parser
         rules, directives = Parser(self.config.program).parse_rules(
             return_directives=True
@@ -574,7 +574,7 @@ class PyAgentPrologModel(PreTrainedModel):
         self._solver._apply_directives(directives)
         for r in rules:
             self._agent.solver.database.add_rule(r)
-        # И KB
+        # And the KB
         path = self._resolve_kb_path(self.config.kb_file)
         if path and os.path.exists(path):
             self._load_kb_file(path, self.config.kb_format)

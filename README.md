@@ -2,36 +2,36 @@
 
 Hugging Face integration for [PyAgentProlog](https://github.com/yourusername/pyagentprolog).
 
-## Автор
+## Author
 
-Andrey Vorfolomeev (Ворфоломеев Андрей Викторович)
+Andrey Vorfolomeev
 
-Позволяет использовать Prolog-движок PyAgentProlog как обычную HF-модель:
+Allows you to use the PyAgentProlog Prolog engine as a regular HF model:
 
 * `PyAgentPrologModel.from_pretrained(...)` / `save_pretrained(...)`
 * `AutoModel.from_pretrained(..., trust_remote_code=True)`
 * `pipeline("prolog", model=...)`
-* `push_to_hub(...)` для публикации моделей на HF Hub
+* `push_to_hub(...)` for publishing models to the HF Hub
 
-## Установка
+## Installation
 
 ```bash
-# Ядро устанавливается автоматически как зависимость
+# The core is installed automatically as a dependency
 pip install pyagentprolog-hf
 
-# С семантической унификацией (sentence-transformers)
+# With semantic unification (sentence-transformers)
 pip install pyagentprolog-hf[semantic-st]
 
-# С Ollama-эмбеддингами
+# With Ollama embeddings
 pip install pyagentprolog-hf[semantic-ollama]
 
-# С CLI для HF Hub
+# With CLI for HF Hub
 pip install pyagentprolog-hf[hub]
 
-# Всё сразу
+# Everything at once
 pip install pyagentprolog-hf[all]
 ```
 
-## Лицензия
+## License
 
 MIT
