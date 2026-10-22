@@ -1,6 +1,5 @@
 # pyagentprolog-hf
-
-Hugging Face integration for [PyAgentProlog](https://github.com/yourusername/pyagentprolog).
+> Hugging Face integration for PyAgentProlog
 
 ## Author
 
