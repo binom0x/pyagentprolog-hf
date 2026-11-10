@@ -1,2 +1,0 @@
-[transformers.models]
-pyagentprolog = pyagentprolog_hf.registration:register_with_transformers
